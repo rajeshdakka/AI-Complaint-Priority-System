@@ -1,48 +1,106 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+# train_model.py
+
+import pandas as pd
 import pickle
 
-# Sample training data
-X = [
-    "Flood in village urgent help needed",
-    "Road damaged after heavy rain",
-    "Electricity issue in street",
-    "Tree fallen on road",
-    "Water leakage in home",
-    "Bridge collapsed urgent rescue needed",
-    "Garbage issue in colony",
-    "Fire accident immediate response needed",
-    "Hospital emergency ambulance required",
-    "Street light not working"
-]
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
 
-y = [
-    "High",
-    "Medium",
-    "Low",
-    "Medium",
-    "Low",
-    "High",
-    "Low",
-    "High",
-    "High",
-    "Low"
-]
 
-# Vectorizer
+# -----------------------------------
+# Step 1: Load Dataset from CSV
+# -----------------------------------
+
+data = pd.read_csv("dataset.csv")
+
+print("\nDataset Loaded Successfully!\n")
+print(data.head())
+
+
+# -----------------------------------
+# Step 2: Input and Output
+# -----------------------------------
+
+X = data["issue"]
+y = data["priority"]
+
+
+# -----------------------------------
+# Step 3: Train-Test Split
+# -----------------------------------
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+
+# -----------------------------------
+# Step 4: Feature Extraction (TF-IDF)
+# -----------------------------------
+
 vectorizer = TfidfVectorizer()
-X_vectorized = vectorizer.fit_transform(X)
 
-# Model
+X_train_vectorized = vectorizer.fit_transform(X_train)
+X_test_vectorized = vectorizer.transform(X_test)
+
+
+# -----------------------------------
+# Step 5: Model Training
+# -----------------------------------
+
 model = LogisticRegression()
-model.fit(X_vectorized, y)
 
-# Save vectorizer
-with open("vectorizer.pkl", "wb") as f:
-    pickle.dump(vectorizer, f)
+model.fit(
+    X_train_vectorized,
+    y_train
+)
 
-# Save model
+print("\nModel Training Completed!\n")
+
+
+# -----------------------------------
+# Step 6: Prediction
+# -----------------------------------
+
+predictions = model.predict(
+    X_test_vectorized
+)
+
+
+# -----------------------------------
+# Step 7: Model Evaluation
+# -----------------------------------
+
+accuracy = accuracy_score(
+    y_test,
+    predictions
+)
+
+print("Model Accuracy:", round(accuracy * 100, 2), "%")
+
+print("\nClassification Report:\n")
+
+print(
+    classification_report(
+        y_test,
+        predictions
+    )
+)
+
+
+# -----------------------------------
+# Step 8: Save Model + Vectorizer
+# -----------------------------------
+
 with open("model.pkl", "wb") as f:
     pickle.dump(model, f)
 
-print("Model and Vectorizer saved successfully!")
+with open("vectorizer.pkl", "wb") as f:
+    pickle.dump(vectorizer, f)
+
+print("\nModel and Vectorizer saved successfully!")
