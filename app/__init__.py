@@ -18,11 +18,8 @@ def create_app():
     )
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-
-    # Upload folder config
     app.config["UPLOAD_FOLDER"] = "static/uploads"
 
-    # Create upload folder automatically
     os.makedirs(
         app.config["UPLOAD_FOLDER"],
         exist_ok=True
@@ -30,12 +27,16 @@ def create_app():
 
     bcrypt.init_app(app)
 
+    # Import Blueprints
     from app.routes.auth_routes import auth_bp
     from app.routes.report_routes import report_bp
     from app.routes.admin_routes import admin_bp
+    from app.routes.pdf_routes import pdf_bp   # NEW
 
+    # Register Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(pdf_bp)             # NEW
 
     return app
