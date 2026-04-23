@@ -37,6 +37,10 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(admin_bp)
-    app.register_blueprint(pdf_bp)             # NEW
+    app.register_blueprint(pdf_bp)
+    
+    from init_db import create_tables
+
+    create_tables()
 
     return app
