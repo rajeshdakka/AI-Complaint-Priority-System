@@ -1,7 +1,7 @@
 
 import os
 from werkzeug.utils import secure_filename
-from flask import Blueprint, request, render_template, current_app
+from flask import Blueprint, request, render_template, current_app, redirect
 from app.services.db_service import get_db_connection
 from app.services.ml_service import predict_priority
 from app.utils.auth_decorator import token_required
@@ -242,6 +242,52 @@ def report_detail(report_id):
             "report_detail.html",
             report=report
         )
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }, 500
+    
+# -----------------------------------
+# Update Report Status
+# -----------------------------------
+
+@report_bp.route("/report/<int:report_id>/status", methods=["POST"])
+@token_required
+def update_status(report_id):
+    try:
+        # Only admin can update status
+        if request.role != "admin":
+            return {
+                "status": "error",
+                "message": "Access denied"
+            }, 403
+
+        status = request.form["status"]
+
+        import datetime
+        updated_at = datetime.datetime.now()
+
+        db = get_db_connection()
+        cursor = db.cursor()
+
+        cursor.execute("""
+            UPDATE reports
+            SET status = ?, updated_at = ?
+            WHERE id = ?
+        """, (
+            status,
+            str(updated_at),
+            report_id
+        ))
+
+        db.commit()
+
+        cursor.close()
+        db.close()
+
+        return redirect(f"/report/{report_id}")   
 
     except Exception as e:
         return {
